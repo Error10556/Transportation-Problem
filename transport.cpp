@@ -218,18 +218,4 @@ public:
 
 int main()
 {
-    vector<int> sup{1, 2, 3};
-    vector<int> dem{4, 2};
-    Matrix<int> cost(3, 2);
-    cost[0] = {3, 4};
-    cost[1] = {2, 1};
-    cost[2] = {4, 1};
-    TransportationProblemSetup ts(sup, dem, cost);
-    ts.ChooseAsBasic(0, 1);
-    ts.ChooseAsBasic(1, 0);
-    cout << "Supply: " << ts.RemainingSupply()
-         << "\nDemand: " << ts.RemainingDemand() << "\nBasics:\n"
-         << ts.BasicValues() << "\nChosen:\n"
-         << ts.Basics() << "\nClosed supplies: " << ts.ClosedSupplies()
-         << "\nClosed demands: " << ts.ClosedDemands();
 }
