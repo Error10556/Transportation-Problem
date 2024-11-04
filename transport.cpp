@@ -100,6 +100,27 @@ template <class T> ostream& operator<<(ostream& out, const Matrix<T>& mat)
     return out << mat.ToStrings();
 }
 
+template <class T>
+ostream& operator<<(ostream& out, const vector<T>& v)
+{
+    out << "{ ";
+    bool notfirst = false;
+    for (auto& i : v)
+    {
+        if (notfirst)
+            out << ", ";
+        out << i;
+        notfirst = true;
+    }
+    return out << " }";
+}
+
+template<class T, class U>
+ostream& operator<<(ostream& out, const pair<T, U>& p)
+{
+    return out << '(' << p.first << ", " << p.second << ')';
+}
+
 template <class T> struct TransportationProblemSetup
 {
 private:
@@ -191,4 +212,5 @@ public:
 
 int main()
 {
+
 }
