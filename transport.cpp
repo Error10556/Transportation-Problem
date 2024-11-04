@@ -250,18 +250,32 @@ ostream& operator<<(ostream& out, const TransportationProblemSetup<T>& tp)
     table[0][w + 1] = "Supply";
     const auto& sup = tp.Supply();
     const auto& dem = tp.Demand();
+    const auto& nsup = tp.RemainingSupply();
+    const auto& ndem = tp.RemainingDemand();
     for (int i = 0; i < sup.size(); i++)
-        table[i + 1][w + 1] = ConvertToString(sup[i]);
+        table[i + 1][w + 1] =
+            "(" + ConvertToString(sup[i]) + ") " + ConvertToString(nsup[i]);
     for (int i = 0; i < dem.size(); i++)
-        table[h + 1][i + 1] = ConvertToString(dem[i]);
+        table[h + 1][i + 1] =
+            "(" + ConvertToString(dem[i]) + ") " + ConvertToString(ndem[i]);
     for (int i = 0; i < h; i++)
         for (int j = 0; j < w; j++)
             if (basics[i][j])
-                table[i + 1][j + 1] = "(" + ConvertToString(costs[i][j]) +
-                                      ") " + ConvertToString(basicVals[i][j]);
+                table[i + 1][j + 1] = ConvertToString(basicVals[i][j]) + " ($" +
+                                      ConvertToString(costs[i][j]) + ")";
     return out << table;
 }
 
 int main()
 {
+    vector<int> sup{1, 2, 3};
+    vector<int> dem{4, 2};
+    Matrix<int> cost(3, 2);
+    cost[0] = {3, 4};
+    cost[1] = {2, 1};
+    cost[2] = {4, 1};
+    TransportationProblemSetup ts(sup, dem, cost);
+    ts.ChooseAsBasic(0, 1);
+    ts.ChooseAsBasic(1, 0);
+    cout << ts;
 }
