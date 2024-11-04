@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <functional>
 #include <iostream>
 #include <numeric>
 #include <sstream>
@@ -121,6 +122,14 @@ ostream& operator<<(ostream& out, const pair<T, U>& p)
     return out << '(' << p.first << ", " << p.second << ')';
 }
 
+template <class T> struct TransportationProblemSetup;
+
+template <class T> class InitialSolutionStep
+{
+public:
+    typedef bool (*Func)(TransportationProblemSetup<T>&);
+};
+
 template <class T> struct TransportationProblemSetup
 {
 private:
@@ -223,6 +232,11 @@ public:
         return accumulate(supply.begin(), supply.end(), 0) ==
                accumulate(demand.begin(), demand.end(), 0);
     }
+    void Solve(typename InitialSolutionStep<T>::Func solver)
+    {
+        while (solver(*this))
+            ;
+    }
 };
 
 template <class T>
@@ -266,16 +280,115 @@ ostream& operator<<(ostream& out, const TransportationProblemSetup<T>& tp)
     return out << table;
 }
 
+template<class T>
+bool NorthwestCornerRule(TransportationProblemSetup<T>& tp)
+{
+    int col, row;
+    int w = tp.Demand().size();
+    int h = tp.Supply().size();
+    for (col = 0; col < w; col++)
+        if (!tp.DemandIsClosed(col))
+            break;
+    if (col == w)
+        return false;
+    for (row = 0; row < h; row++)
+        if (!tp.SupplyIsClosed(row))
+            break;
+    if (row == h)
+        return false;
+    tp.ChooseAsBasic(row, col);
+    return true;
+}
+
+template<class T>
+pair<T, T> TwoMin(const vector<T>& items)
+{
+    if (items.size() == 1)
+        return {items[0], items[0]};
+    T a = items[0], b = items[1];
+    if (a > b)
+        swap(a, b);
+    for (int i = 2; i < items.size(); i++)
+    {
+        T cur = items[i];
+        if (cur < a)
+        {
+            b = a;
+            a = cur;
+        }
+        else
+            b = min(b, cur);
+    }
+    return {a, b};
+}
+
+template<class T>
+bool VogelApproximation(TransportationProblemSetup<T>& tp)
+{
+    vector<pair<T, int>> live;
+    int w = tp.Demand().size();
+    int h = tp.Supply().size();
+    int bestdiff = -1;
+    int bestrow = -1, bestcol = -1;
+    const auto& costs = tp.Costs();
+    for (int i = 0; i < w; i++)
+    {
+        if (tp.DemandIsClosed(i))
+            continue;
+        live.clear();
+        for (int j = 0; j < h; j++)
+            if (!tp.IsBasic(j, i) && !tp.SupplyIsClosed(j))
+                live.emplace_back(costs[j][i], j);
+        if (live.empty())
+            continue;
+        auto p = TwoMin(live);
+        int diff = p.second.first - p.first.first;
+        if (bestdiff < diff)
+        {
+            bestcol = true;
+            bestdiff = diff;
+            bestcol = i;
+            bestrow = p.first.second;
+        }
+    }
+    for (int i = 0; i < h; i++)
+    {
+        if (tp.SupplyIsClosed(i))
+            continue;
+        live.clear();
+        for (int j = 0; j < w; j++)
+            if (!tp.IsBasic(i, j) && !tp.DemandIsClosed(j))
+                live.emplace_back(costs[i][j], j);
+        if (live.empty())
+            continue;
+        auto p = TwoMin(live);
+        int diff = p.second.first - p.first.first;
+        if (bestdiff < diff)
+        {
+            bestcol = false;
+            bestdiff = diff;
+            bestrow = i;
+            bestcol = p.first.second;
+        }
+    }
+    if (bestdiff == -1)
+        return false;
+    tp.ChooseAsBasic(bestrow, bestcol);
+    return true;
+}
+
 int main()
 {
-    vector<int> sup{1, 2, 3};
-    vector<int> dem{4, 2};
-    Matrix<int> cost(3, 2);
-    cost[0] = {3, 4};
-    cost[1] = {2, 1};
-    cost[2] = {4, 1};
+    vector<int> sup{50, 60, 50, 50};
+    vector<int> dem{30, 20, 70, 30, 60};
+    Matrix<int> cost(4, 5);
+    const int M = 1000;
+    cost[0] = {16, 16, 13, 22, 17};
+    cost[1] = {14, 14, 13, 19, 15};
+    cost[2] = {19, 19, 20, 23, M};
+    cost[3] = {M, 0, M, 0, 0};
     TransportationProblemSetup ts(sup, dem, cost);
-    ts.ChooseAsBasic(0, 1);
-    ts.ChooseAsBasic(1, 0);
+    ts.Solve(VogelApproximation<int>);
     cout << ts;
+    cout << "Total: " << ts.TotalCost();
 }
