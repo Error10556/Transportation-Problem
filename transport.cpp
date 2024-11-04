@@ -124,7 +124,7 @@ ostream& operator<<(ostream& out, const pair<T, U>& p)
 template <class T> struct TransportationProblemSetup
 {
 private:
-    vector<T> supply, demand;
+    vector<T> supply, demand, initsupply, initdemand;
     Matrix<T> costs;
     Matrix<bool> basic;
     Matrix<T> basicVal;
@@ -134,7 +134,8 @@ private:
 public:
     TransportationProblemSetup(const vector<T>& supply, const vector<T>& demand,
                                const Matrix<T>& costs)
-        : supply(supply), demand(demand), costs(costs),
+        : supply(supply), initsupply(supply), demand(demand),
+          initdemand(demand), costs(costs),
           basic(costs.Height(), costs.Width()),
           basicVal(costs.Height(), costs.Width()), supplyClosed(supply.size()),
           demandClosed(demand.size())
@@ -160,6 +161,14 @@ public:
         basicVal[row][col] = inc;
         basic[row][col] = true;
         totalcost += inc * costs[row][col];
+    }
+    const vector<T>& Supply() const
+    {
+        return initsupply;
+    }
+    const vector<T>& Demand() const
+    {
+        return initdemand;
     }
     const vector<T>& RemainingSupply() const
     {
@@ -215,6 +224,43 @@ public:
                accumulate(demand.begin(), demand.end(), 0);
     }
 };
+
+template <class T>
+ostream& operator<<(ostream& out, const TransportationProblemSetup<T>& tp)
+{
+    const auto& costs = tp.Costs();
+    const auto& basics = tp.Basics();
+    const auto& basicVals = tp.BasicValues();
+    int w = costs.Width(), h = costs.Height();
+    Matrix<string> table(2 + h, 2 + w);
+    table[0][0] = "Source\\Dest";
+    for (int i = 0; i < w; i++)
+    {
+        string& cur = table[0][i + 1] = to_string(i + 1);
+        if (tp.DemandIsClosed(i))
+            cur.push_back('*');
+    }
+    for (int i = 0; i < h; i++)
+    {
+        string& cur = table[i + 1][0] = to_string(i + 1);
+        if (tp.SupplyIsClosed(i))
+            cur.push_back('*');
+    }
+    table[h + 1][0] = "Demand";
+    table[0][w + 1] = "Supply";
+    const auto& sup = tp.Supply();
+    const auto& dem = tp.Demand();
+    for (int i = 0; i < sup.size(); i++)
+        table[i + 1][w + 1] = ConvertToString(sup[i]);
+    for (int i = 0; i < dem.size(); i++)
+        table[h + 1][i + 1] = ConvertToString(dem[i]);
+    for (int i = 0; i < h; i++)
+        for (int j = 0; j < w; j++)
+            if (basics[i][j])
+                table[i + 1][j + 1] = "(" + ConvertToString(costs[i][j]) +
+                                      ") " + ConvertToString(basicVals[i][j]);
+    return out << table;
+}
 
 int main()
 {
