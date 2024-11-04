@@ -4,6 +4,13 @@
 #include <vector>
 using namespace std;
 
+template <class T> string ConvertToString(T&& obj)
+{
+    ostringstream ss;
+    ss << obj;
+    return ss.str();
+}
+
 template <class T> struct Matrix
 {
 private:
@@ -49,19 +56,13 @@ public:
         for (int i = 0; i < n; i++)
         {
             vector<string>& row = table[i];
-            for (auto& obj : mat[i])
-                row.push_back(ConvertToString(obj));
+            auto& myrow = mat[i];
+            for (int j = 0; j < m; j++)
+                row[j] = ConvertToString(myrow[j]);
         }
         return table;
     }
 };
-
-template <class T> string ConvertToString(T&& obj)
-{
-    ostringstream ss;
-    ss << obj;
-    return ss.str();
-}
 
 ostream& operator<<(ostream& out, const Matrix<string>& mat)
 {
@@ -111,4 +112,9 @@ public:
 
 int main()
 {
+    Matrix<int> a(2, 3);
+    for (int i = 0; i < 2; i++)
+        for (int j = 0; j < 3; j++)
+            a[i][j] = (j + 8 + (j + 1) * (i + 1));
+    cout << a;
 }

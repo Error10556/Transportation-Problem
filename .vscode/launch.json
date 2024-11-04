@@ -6,6 +6,7 @@
             "request": "launch",
             "name": "C++",
             "preLaunchTask": "Compile",
+            "postDebugTask": "Clean",
             "expressions": "native",
             "program": "${workspaceFolder}/${fileBasenameNoExtension}"
         }
