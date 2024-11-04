@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <iostream>
+#include <numeric>
 #include <sstream>
 #include <vector>
 using namespace std;
@@ -100,12 +101,11 @@ template <class T> ostream& operator<<(ostream& out, const Matrix<T>& mat)
     return out << mat.ToStrings();
 }
 
-template <class T>
-ostream& operator<<(ostream& out, const vector<T>& v)
+template <class T> ostream& operator<<(ostream& out, const vector<T>& v)
 {
     out << "{ ";
     bool notfirst = false;
-    for (auto& i : v)
+    for (const auto& i : v)
     {
         if (notfirst)
             out << ", ";
@@ -115,7 +115,7 @@ ostream& operator<<(ostream& out, const vector<T>& v)
     return out << " }";
 }
 
-template<class T, class U>
+template <class T, class U>
 ostream& operator<<(ostream& out, const pair<T, U>& p)
 {
     return out << '(' << p.first << ", " << p.second << ')';
@@ -130,12 +130,13 @@ private:
     Matrix<T> basicVal;
     vector<bool> supplyClosed, demandClosed;
     T totalcost = 0;
+
 public:
     TransportationProblemSetup(const vector<T>& supply, const vector<T>& demand,
                                const Matrix<T>& costs)
         : supply(supply), demand(demand), costs(costs),
           basic(costs.Height(), costs.Width()),
-          basicVal(costs.Width(), costs.Height()), supplyClosed(supply.size()),
+          basicVal(costs.Height(), costs.Width()), supplyClosed(supply.size()),
           demandClosed(demand.size())
     {
     }
@@ -208,9 +209,27 @@ public:
     {
         return totalcost;
     }
+    bool Balanced() const
+    {
+        return accumulate(supply.begin(), supply.end(), 0) ==
+               accumulate(demand.begin(), demand.end(), 0);
+    }
 };
 
 int main()
 {
-
+    vector<int> sup{1, 2, 3};
+    vector<int> dem{4, 2};
+    Matrix<int> cost(3, 2);
+    cost[0] = {3, 4};
+    cost[1] = {2, 1};
+    cost[2] = {4, 1};
+    TransportationProblemSetup ts(sup, dem, cost);
+    ts.ChooseAsBasic(0, 1);
+    ts.ChooseAsBasic(1, 0);
+    cout << "Supply: " << ts.RemainingSupply()
+         << "\nDemand: " << ts.RemainingDemand() << "\nBasics:\n"
+         << ts.BasicValues() << "\nChosen:\n"
+         << ts.Basics() << "\nClosed supplies: " << ts.ClosedSupplies()
+         << "\nClosed demands: " << ts.ClosedDemands();
 }
