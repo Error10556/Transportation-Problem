@@ -100,21 +100,95 @@ template <class T> ostream& operator<<(ostream& out, const Matrix<T>& mat)
     return out << mat.ToStrings();
 }
 
-template <class T> struct TransportationProblem
+template <class T> struct TransportationProblemSetup
 {
-public:
+private:
     vector<T> supply, demand;
     Matrix<T> costs;
     Matrix<bool> basic;
     Matrix<T> basicVal;
-
+    vector<bool> supplyClosed, demandClosed;
+    T totalcost = 0;
+public:
+    TransportationProblemSetup(const vector<T>& supply, const vector<T>& demand,
+                               const Matrix<T>& costs)
+        : supply(supply), demand(demand), costs(costs),
+          basic(costs.Height(), costs.Width()),
+          basicVal(costs.Width(), costs.Height()), supplyClosed(supply.size()),
+          demandClosed(demand.size())
+    {
+    }
+    void ChooseAsBasic(int row, int col)
+    {
+        T& sup = supply[row];
+        T& dem = demand[col];
+        T inc;
+        if (sup <= dem)
+        {
+            inc = sup;
+            supplyClosed[row] = true;
+        }
+        else
+        {
+            inc = dem;
+            demandClosed[col] = true;
+        }
+        sup -= inc;
+        dem -= inc;
+        basicVal[row][col] = inc;
+        basic[row][col] = true;
+        totalcost += inc * costs[row][col];
+    }
+    const vector<T>& RemainingSupply() const
+    {
+        return supply;
+    }
+    const vector<T>& RemainingDemand() const
+    {
+        return demand;
+    }
+    const Matrix<T>& Costs() const
+    {
+        return costs;
+    }
+    const Matrix<T>& BasicValues() const
+    {
+        return basicVal;
+    }
+    T BasicValue(int row, int col) const
+    {
+        return basicVal[row][col];
+    }
+    bool IsBasic(int row, int col) const
+    {
+        return basic[row][col];
+    }
+    const Matrix<bool>& Basics() const
+    {
+        return basic;
+    }
+    bool SupplyIsClosed(int row) const
+    {
+        return supplyClosed[row];
+    }
+    bool DemandIsClosed(int col) const
+    {
+        return demandClosed[col];
+    }
+    const vector<bool>& ClosedSupplies() const
+    {
+        return supplyClosed;
+    }
+    const vector<bool>& ClosedDemands() const
+    {
+        return demandClosed;
+    }
+    T TotalCost() const
+    {
+        return totalcost;
+    }
 };
 
 int main()
 {
-    Matrix<int> a(2, 3);
-    for (int i = 0; i < 2; i++)
-        for (int j = 0; j < 3; j++)
-            a[i][j] = (j + 8 + (j + 1) * (i + 1));
-    cout << a;
 }
