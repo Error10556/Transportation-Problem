@@ -435,7 +435,7 @@ template <class T> bool RussellApproximation(TransportationProblemSetup<T>& tp)
     return true;
 }
 
-int main()
+void Example()
 {
     vector<int> sup{50, 60, 50, 50};
     vector<int> dem{30, 20, 70, 30, 60};
@@ -449,4 +449,9 @@ int main()
     ts.Solve(RussellApproximation<int>);
     cout << ts;
     cout << "Total: " << ts.TotalCost();
+}
+
+int main()
+{
+    Example();
 }
