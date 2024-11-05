@@ -27,6 +27,14 @@ public:
         for (auto& v : mat)
             v.resize(w);
     }
+    T& operator[](pair<size_t, size_t> index)
+    {
+        return mat[index.first][index.second];
+    }
+    T operator[](pair<size_t, size_t> index) const
+    {
+        return mat[index.first][index.second];
+    }
     vector<T>& operator[](size_t index)
     {
         return mat[index];
@@ -256,11 +264,11 @@ public:
         table[h + 1][0] = "Demand";
         table[0][w + 1] = "Supply";
         for (int i = 0; i < supply.size(); i++)
-            table[i + 1][w + 1] =
-                "(" + ConvertToString(supply[i]) + ") " + ConvertToString(initsupply[i]);
+            table[i + 1][w + 1] = "(" + ConvertToString(supply[i]) + ") " +
+                                  ConvertToString(initsupply[i]);
         for (int i = 0; i < demand.size(); i++)
-            table[h + 1][i + 1] =
-                "(" + ConvertToString(demand[i]) + ") " + ConvertToString(initdemand[i]);
+            table[h + 1][i + 1] = "(" + ConvertToString(demand[i]) + ") " +
+                                  ConvertToString(initdemand[i]);
         for (int i = 0; i < h; i++)
             for (int j = 0; j < w; j++)
                 if (basic[i][j])
@@ -371,6 +379,62 @@ template <class T> bool VogelApproximation(TransportationProblemSetup<T>& tp)
     return true;
 }
 
+template <class T> bool RussellApproximation(TransportationProblemSetup<T>& tp)
+{
+    size_t w = tp.Demand().size(), h = tp.Supply().size();
+    vector<T> u(h), v(w);
+    vector<bool> ua(h), va(w);
+    vector<pair<size_t, size_t>> choices;
+    const auto& costs = tp.Costs();
+    for (size_t i = 0; i < h; i++)
+    {
+        if (tp.SupplyIsClosed(i))
+            continue;
+        for (size_t j = 0; j < w; j++)
+        {
+            if (tp.DemandIsClosed(j))
+                continue;
+            if (tp.IsBasic(i, j))
+                continue;
+            T curcost = costs[i][j];
+            choices.emplace_back(i, j);
+            if (!ua[i])
+            {
+                ua[i] = true;
+                u[i] = curcost;
+            }
+            else
+                u[i] = max(u[i], curcost);
+            if (!va[j])
+            {
+                va[j] = true;
+                v[j] = curcost;
+            }
+            else
+                v[j] = max(v[j], curcost);
+        }
+    }
+    if (choices.empty())
+        return false;
+    pair<int, int> bestchoice = choices.front();
+    int bestdiff =
+        costs[bestchoice] - u[bestchoice.first] - v[bestchoice.second];
+    for (int i = 1; i < choices.size(); i++)
+    {
+        auto choice = choices[i];
+        int diff = costs[choice] - u[choice.first] - v[choice.second];
+        if (diff < bestdiff)
+        {
+            bestdiff = diff;
+            bestchoice = choice;
+        }
+    }
+    if (bestdiff > 0)
+        return false;
+    tp.ChooseAsBasic(bestchoice.first, bestchoice.second);
+    return true;
+}
+
 int main()
 {
     vector<int> sup{50, 60, 50, 50};
@@ -382,7 +446,7 @@ int main()
     cost[2] = {19, 19, 20, 23, M};
     cost[3] = {M, 0, M, 0, 0};
     TransportationProblemSetup ts(sup, dem, cost);
-    ts.Solve(VogelApproximation<int>);
+    ts.Solve(RussellApproximation<int>);
     cout << ts;
     cout << "Total: " << ts.TotalCost();
 }
