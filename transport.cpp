@@ -451,6 +451,31 @@ void Example()
     cout << "Total: " << ts.TotalCost();
 }
 
+template<class T>
+vector<T> ReadVector(istream& in)
+{
+    vector<T> res;
+    string line; getline(in, line);
+    stringstream ss(line);
+    while (true)
+    {
+        T item; ss >> item;
+        if (!ss)
+            break;
+        res.push_back(item);
+    }
+    return res;
+}
+
+template<class T>
+Matrix<T> ReadMatrix(istream& in, int nlines)
+{
+    Matrix<T> res(nlines, 0);
+    for (int i = 0; i < nlines; i++)
+        res[i] = ReadVector<T>();
+    return res;
+}
+
 int main()
 {
     Example();
