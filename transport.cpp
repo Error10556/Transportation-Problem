@@ -1,5 +1,4 @@
 #include <algorithm>
-#include <functional>
 #include <iostream>
 #include <numeric>
 #include <sstream>
@@ -237,51 +236,48 @@ public:
         while (solver(*this))
             ;
     }
+    Matrix<string> Render() const
+    {
+        int w = costs.Width(), h = costs.Height();
+        Matrix<string> table(2 + h, 2 + w);
+        table[0][0] = "Source\\Dest";
+        for (int i = 0; i < w; i++)
+        {
+            string& cur = table[0][i + 1] = to_string(i + 1);
+            if (DemandIsClosed(i))
+                cur.push_back('*');
+        }
+        for (int i = 0; i < h; i++)
+        {
+            string& cur = table[i + 1][0] = to_string(i + 1);
+            if (SupplyIsClosed(i))
+                cur.push_back('*');
+        }
+        table[h + 1][0] = "Demand";
+        table[0][w + 1] = "Supply";
+        for (int i = 0; i < supply.size(); i++)
+            table[i + 1][w + 1] =
+                "(" + ConvertToString(supply[i]) + ") " + ConvertToString(initsupply[i]);
+        for (int i = 0; i < demand.size(); i++)
+            table[h + 1][i + 1] =
+                "(" + ConvertToString(demand[i]) + ") " + ConvertToString(initdemand[i]);
+        for (int i = 0; i < h; i++)
+            for (int j = 0; j < w; j++)
+                if (basic[i][j])
+                    table[i + 1][j + 1] = ConvertToString(basicVal[i][j]) +
+                                          " ($" + ConvertToString(costs[i][j]) +
+                                          ")";
+        return table;
+    }
 };
 
 template <class T>
 ostream& operator<<(ostream& out, const TransportationProblemSetup<T>& tp)
 {
-    const auto& costs = tp.Costs();
-    const auto& basics = tp.Basics();
-    const auto& basicVals = tp.BasicValues();
-    int w = costs.Width(), h = costs.Height();
-    Matrix<string> table(2 + h, 2 + w);
-    table[0][0] = "Source\\Dest";
-    for (int i = 0; i < w; i++)
-    {
-        string& cur = table[0][i + 1] = to_string(i + 1);
-        if (tp.DemandIsClosed(i))
-            cur.push_back('*');
-    }
-    for (int i = 0; i < h; i++)
-    {
-        string& cur = table[i + 1][0] = to_string(i + 1);
-        if (tp.SupplyIsClosed(i))
-            cur.push_back('*');
-    }
-    table[h + 1][0] = "Demand";
-    table[0][w + 1] = "Supply";
-    const auto& sup = tp.Supply();
-    const auto& dem = tp.Demand();
-    const auto& nsup = tp.RemainingSupply();
-    const auto& ndem = tp.RemainingDemand();
-    for (int i = 0; i < sup.size(); i++)
-        table[i + 1][w + 1] =
-            "(" + ConvertToString(sup[i]) + ") " + ConvertToString(nsup[i]);
-    for (int i = 0; i < dem.size(); i++)
-        table[h + 1][i + 1] =
-            "(" + ConvertToString(dem[i]) + ") " + ConvertToString(ndem[i]);
-    for (int i = 0; i < h; i++)
-        for (int j = 0; j < w; j++)
-            if (basics[i][j])
-                table[i + 1][j + 1] = ConvertToString(basicVals[i][j]) + " ($" +
-                                      ConvertToString(costs[i][j]) + ")";
-    return out << table;
+    return out << tp.Render();
 }
 
-template<class T>
-bool NorthwestCornerRule(TransportationProblemSetup<T>& tp)
+template <class T> bool NorthwestCornerRule(TransportationProblemSetup<T>& tp)
 {
     int col, row;
     int w = tp.Demand().size();
@@ -300,8 +296,7 @@ bool NorthwestCornerRule(TransportationProblemSetup<T>& tp)
     return true;
 }
 
-template<class T>
-pair<T, T> TwoMin(const vector<T>& items)
+template <class T> pair<T, T> TwoMin(const vector<T>& items)
 {
     if (items.size() == 1)
         return {items[0], items[0]};
@@ -322,8 +317,7 @@ pair<T, T> TwoMin(const vector<T>& items)
     return {a, b};
 }
 
-template<class T>
-bool VogelApproximation(TransportationProblemSetup<T>& tp)
+template <class T> bool VogelApproximation(TransportationProblemSetup<T>& tp)
 {
     vector<pair<T, int>> live;
     int w = tp.Demand().size();
