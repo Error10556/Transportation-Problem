@@ -595,7 +595,8 @@ template <class T> ostream& operator<<(ostream& out, const BasicVector<T>& bv)
 template <class T> void PrintSolution(const TransportationProblemSetup<T>& tp)
 {
     cout << tp.Render();
-    cout << "Basic variables: " << BasicVector(tp) << "\n\n";
+    cout << "Basic variables: " << BasicVector(tp) << endl;
+    cout << "Total cost: " << tp.TotalCost() << endl << endl;
 }
 
 int main()
