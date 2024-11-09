@@ -552,6 +552,52 @@ template <class T> Matrix<T> ReadMatrix(istream& in, int nlines)
     return res;
 }
 
+template <class T> class BasicVector
+{
+    const TransportationProblemSetup<T>& tp;
+    template <class U>
+    friend ostream& operator<<(ostream& out, const BasicVector<U>& bv);
+
+public:
+    BasicVector(const TransportationProblemSetup<T>& tp) : tp(tp)
+    {
+    }
+};
+
+template <class T> ostream& operator<<(ostream& out, const BasicVector<T>& bv)
+{
+    const auto& tp = bv.tp;
+    out << "[";
+    vector<pair<int, int>> bas;
+    for (int i = 0; i < tp.Supply().size(); i++)
+        for (int j = 0; j < tp.Demand().size(); j++)
+            if (tp.IsBasic(i, j))
+                bas.emplace_back(i, j);
+    for (int i = 0; i < bas.size(); i++)
+    {
+        if (i)
+            out << ", ";
+        auto p = bas[i];
+        out << 'x' << p.first + 1 << p.second + 1;
+    }
+    out << "] = [";
+    for (int i = 0; i < bas.size(); i++)
+    {
+        if (i)
+            out << ", ";
+        auto p = bas[i];
+        out << tp.BasicValue(p.first, p.second);
+    }
+    out << ']';
+    return out;
+}
+
+template <class T> void PrintSolution(const TransportationProblemSetup<T>& tp)
+{
+    cout << tp.Render();
+    cout << "Basic variables: " << BasicVector(tp) << "\n\n";
+}
+
 int main()
 {
     // Example();
@@ -584,10 +630,13 @@ int main()
     t1.Solve(NorthwestCornerRule<int>);
     t2.Solve(VogelApproximation<int>);
     t3.Solve(RussellApproximation<int>);
-    cout << "Initial basic feasible solutions X0:\n\n";
-    cout << "North-west corner rule:\n" << t1.Render();
-    cout << endl << "Vogel Approximation:\n" << t2.Render();
-    cout << endl << "Russell Approximation:\n" << t3.Render();
+    cout << "--- Initial basic feasible solutions ---\n\n";
+    cout << "North-west corner rule:\n";
+    PrintSolution(t1);
+    cout << "Vogel Approximation:\n";
+    PrintSolution(t2);
+    cout << "Russell Approximation:\n";
+    PrintSolution(t3);
 
     return 0;
 }
