@@ -71,10 +71,14 @@ public:
         }
         return table;
     }
-    bool HasNegativeValues() const {
-        for (const auto& row : mat) {
-            for (const auto& value : row) {
-                if (value < 0) {
+    bool HasNegativeValues() const
+    {
+        for (const auto& row : mat)
+        {
+            for (const auto& value : row)
+            {
+                if (value < 0)
+                {
                     return true;
                 }
             }
@@ -83,10 +87,12 @@ public:
     }
 };
 
-template <typename T>
-bool vectorHasNegativeValues(const vector<T>& vec) {
-    for (const auto& value : vec) {
-        if (value < 0) {
+template <typename T> bool vectorHasNegativeValues(const vector<T>& vec)
+{
+    for (const auto& value : vec)
+    {
+        if (value < 0)
+        {
             return true;
         }
     }
@@ -177,8 +183,8 @@ public:
           demandClosed(demand.size())
     {
     }
-    void checkIsApplicable() {
-
+    void checkIsApplicable()
+    {
     }
     void ChooseAsBasic(int row, int col)
     {
@@ -267,7 +273,7 @@ public:
         while (solver(*this))
             ;
     }
-    Matrix<string> printInitialTable() const
+    Matrix<string> RenderInitialTable() const
     {
         int w = costs.Width(), h = costs.Height();
         Matrix<string> table(2 + h, 2 + w);
@@ -496,19 +502,22 @@ void Example()
     cost[1] = {4, 5, 9, 8};
     cost[2] = {9, 2, 3, 6};
 
-    if (vectorHasNegativeValues(sup) || vectorHasNegativeValues(dem) || cost.HasNegativeValues()) {
+    if (vectorHasNegativeValues(sup) || vectorHasNegativeValues(dem) ||
+        cost.HasNegativeValues())
+    {
         cout << "The method is not applicable!";
         return;
     }
 
     TransportationProblemSetup<int> t1(sup, dem, cost);
-    if (!t1.Balanced()) {
+    if (!t1.Balanced())
+    {
         cout << "The problem is not balanced!";
         return;
     }
     TransportationProblemSetup<int> t2(sup, dem, cost);
     TransportationProblemSetup<int> t3(sup, dem, cost);
-    cout << "Input parameter table:\n" << t1.printInitialTable() << endl;
+    cout << "Input parameter table:\n" << t1.RenderInitialTable() << endl;
     t1.Solve(NorthwestCornerRule<int>);
     t2.Solve(VogelApproximation<int>);
     t3.Solve(RussellApproximation<int>);
@@ -518,15 +527,16 @@ void Example()
     cout << endl << "Russell Approximation:\n" << t3.BasicValues();
 }
 
-template<class T>
-vector<T> ReadVector(istream& in)
+template <class T> vector<T> ReadVector(istream& in)
 {
     vector<T> res;
-    string line; getline(cin, line);
+    string line;
+    getline(cin, line);
     stringstream ss(line);
     while (true)
     {
-        T item; ss >> item;
+        T item;
+        ss >> item;
         if (!ss)
             break;
         res.push_back(item);
@@ -534,8 +544,7 @@ vector<T> ReadVector(istream& in)
     return res;
 }
 
-template<class T>
-Matrix<T> ReadMatrix(istream& in, int nlines)
+template <class T> Matrix<T> ReadMatrix(istream& in, int nlines)
 {
     Matrix<T> res(nlines, 0);
     for (int i = 0; i < nlines; i++)
@@ -556,26 +565,29 @@ int main()
     cout << "A vector of coefficients of demand: ";
     vector<int> D = ReadVector<int>(cin);
 
-    if (vectorHasNegativeValues(S) || vectorHasNegativeValues(D) || C.HasNegativeValues()) {
+    if (vectorHasNegativeValues(S) || vectorHasNegativeValues(D) ||
+        C.HasNegativeValues())
+    {
         cout << "The method is not applicable!";
         return 0;
     }
 
     TransportationProblemSetup<int> t1(S, D, C);
-    if (!t1.Balanced()) {
+    if (!t1.Balanced())
+    {
         cout << "The problem is not balanced!";
         return 0;
     }
-    TransportationProblemSetup<int> t2(S, D, C);
-    TransportationProblemSetup<int> t3(S, D, C);
-    cout << "Input parameter table:\n" << t1.printInitialTable() << endl;
+    auto t2 = t1;
+    auto t3 = t1;
+    cout << "Input parameter table:\n" << t1.RenderInitialTable() << endl;
     t1.Solve(NorthwestCornerRule<int>);
     t2.Solve(VogelApproximation<int>);
     t3.Solve(RussellApproximation<int>);
     cout << "Initial basic feasible solutions X0:\n\n";
-    cout << "North-west corner rule:\n" << t1.BasicValues();
-    cout << endl << "Vogel Approximation:\n" << t2.BasicValues();
-    cout << endl << "Russell Approximation:\n" << t3.BasicValues();
-    
+    cout << "North-west corner rule:\n" << t1.Render();
+    cout << endl << "Vogel Approximation:\n" << t2.Render();
+    cout << endl << "Russell Approximation:\n" << t3.Render();
+
     return 0;
 }
